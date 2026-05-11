@@ -124,18 +124,16 @@ def checkout_cmd(op: str) -> str:
 
 
 def build_command(job: str) -> tuple[str, Path]:
-    parts = job.split("_", 1)
-    if len(parts) != 2:
+    op = None
+    kind = None
+    for candidate in sorted(OPS, key=len, reverse=True):
+        prefix = candidate + "_"
+        if job.startswith(prefix):
+            op = candidate
+            kind = job[len(prefix) :]
+            break
+    if op is None or kind is None:
         raise ValueError("job must be '<op>_<kind>', for example svd_pytest")
-    op, kind = parts
-    if op == "scatter" and kind.startswith("reduce_"):
-        op = "scatter_reduce"
-        kind = kind[len("reduce_") :]
-    if op == "chunk" and kind.startswith("gated_delta_rule_"):
-        op = "chunk_gated_delta_rule"
-        kind = kind[len("gated_delta_rule_") :]
-    if op not in OPS:
-        raise ValueError(f"unknown op: {op}")
     if kind not in {"env", "smoke", "pytest", "benchmark", "all"}:
         raise ValueError(f"unknown kind: {kind}")
 
