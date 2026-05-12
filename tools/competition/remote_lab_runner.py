@@ -114,10 +114,14 @@ def checkout_cmd(op: str) -> str:
     branch = OPS[op]["branch"]
     return "\n".join(
         [
-            f"git fetch origin {sh_quote(branch)}:{sh_quote(branch)} --depth 1 || "
-            f"git fetch origin {sh_quote(branch)}:{sh_quote(branch)}",
+            "if [ \"${FG_RUNNER_FETCH:-0}\" = \"1\" ]; then",
+            f"  timeout 60 git fetch origin {sh_quote(branch)}:{sh_quote(branch)} --depth 1 || "
+            f"timeout 60 git fetch origin {sh_quote(branch)}:{sh_quote(branch)} || true",
+            "fi",
             f"git checkout {sh_quote(branch)}",
-            f"git pull --ff-only origin {sh_quote(branch)} || true",
+            "if [ \"${FG_RUNNER_FETCH:-0}\" = \"1\" ]; then",
+            f"  timeout 60 git pull --ff-only origin {sh_quote(branch)} || true",
+            "fi",
             "git log --oneline -1",
         ]
     )
